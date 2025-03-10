@@ -188,6 +188,31 @@ describe("spidermonkey export/import sanity test", function() {
         );
     });
 
+    it("should correctly minify spidermonkey AST with parameter mangling", async () => {
+        const code = `
+            export class BackendException {
+                constructor(message = '') {
+                    this.message = message;
+                }
+            }
+        `;
+        const ast = acornParse(code, { sourceType: 'module', locations: true, ecmaVersion: 2015 });
+        const result = await minify(ast, { ecma: 2015, module: true, parse: { spidermonkey: true } });
+
+        const terserAst = parse(code);
+        const mozillaAst = AST.AST_Node.from_mozilla_ast(ast);
+        //console.dir(ast, { depth: null })
+        //console.dir(terserAst, { depth: null });
+        //console.dir(mozillaAst, { depth: null });
+
+        const vanilla = await minify(code, { ecma: 2015, module: true });
+        //console.log(vanilla);
+        assert.strictEqual(
+            result.code,
+            vanilla.code
+        );
+    });
+
     it("should correctly minify AST from from_moz_ast with default function parameter", async () => {
         const code = "function run(x = 2){}";
         const acornAst = acornParse(code, { locations: true, ecmaVersion: 2023 });
